@@ -1,11 +1,19 @@
 // server.js
 const express = require('express');
 const session = require('express-session');
+/// added
+//const mongoose = require('mongoose');
+/// end
 const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
 const { check, validationResult } = require('express-validator');
 const app = express();
+
+
+// Assuming you have a User model defined...............................................................................................................
+//const User = require('./models/User');
+//end of user model defined by me ..................................................................................................
 
 // Configure session middleware
 app.use(session({
@@ -18,7 +26,7 @@ app.use(session({
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '',
+    password: 'root',
     database: 'learning_management'
 });
 
@@ -135,6 +143,48 @@ app.post('/login', (req, res) => {
     });
 });
 
+
+// API endpoints
+// Endpoint to add course to user's selections
+app.post('/api/user/course/add', async (req, res) => {
+    const { userId, courseId } = req.body;
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        user.course.push(courseId);
+        await user.save();
+        return res.status(200).json({ message: 'Course added successfully' });
+    } catch (error) {
+        console.error('Error adding course', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+
+// API endpoint to get selected courses for a specific user
+//app.get('/api/user/:userId/courses', async (req, res) => {
+   //const userId = req.params.userId;
+   ///try {
+    ///  const user = await User.findById(userId);
+    ///  if (!user) {
+  ///        return res.status(404).json({ error: 'User not found' });
+  //    }        
+      // Return user's selected courses
+  ///    return res.status(200).json({ courses: user.courses });
+ //  } catch (error) {
+  ///      console.error('Error fetching user courses', error);
+ ///       return res.status(500).json({ error: 'Internal server error' });
+ //          }
+ //         });
+
+
+
+
+
+
 // Logout route
 app.post('/logout', (req, res) => {
     req.session.destroy();
@@ -142,16 +192,30 @@ app.post('/logout', (req, res) => {
 });
 
 //Dashboard route
+
+// Assuming you have a route for handling the dashboard page
 app.get('/dashboard', (req, res) => {
-    // Assuming you have middleware to handle user authentication and store user information in req.user
-    const userFullName = req.user.full_name;
-    res.render('dashboard', { fullName: userFullName });
+    // Check if the user is logged in and their full name is stored in the session
+    if (req.session.user && req.session.user.full_name) {
+        // Render the dashboard page while passing the user's full name
+        res.render('dashboard', { fullName: req.session.user.full_name });
+    } else {
+        // Redirect the user to the login page if they are not logged in
+        res.redirect('/login');
+    }
 });
+
+
+//app.get('/dashboard', (req, res) => {
+    // Assuming you have middleware to handle user authentication and store user information in req.user
+    //const userFullName = req.user.full_name;
+  //  res.render('dashboard', { fullName: userFullName });
+//});
 
 // Route to retrieve course content
 app.get('/course/:id', (req, res) => {
     const courseId = req.params.id;
-    const sql = 'SELECT * FROM courses WHERE id = ?';
+    const sql = 'SELECT * FROM course WHERE id = ?';
     db.query(sql, [courseId], (err, result) => {
       if (err) {
         throw err;
@@ -161,8 +225,9 @@ app.get('/course/:id', (req, res) => {
     });
   });
 
+
 // Start server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 9015;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (response.ok) {
                 alert('Registration successful');
+                window.location.href =  '/dashboard.html';
             } else {
                 alert('Registration failed');
             }
@@ -44,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (response.ok) {
                 alert('Login successful');
+                window.location.href =  '/course-content.html';
             } else {
                 alert('Invalid username or password');
             }
@@ -60,6 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (response.ok) {
                 alert('Logout successful');
+                window.location.href ='/logout';
+                
             } else {
                 alert('Logout failed');
             }
@@ -69,19 +73,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Check if the current page is the course content page
-    if (window.location.pathname === '/course-content') {
+    if (window.location.pathname === '/course-content.html') {
         // Call the fetchCourseContent function
         fetchCourseContent();
     }
 
      // Check if the current page is the course content page
-    if (window.location.pathname === '/leader-board') {
+    if (window.location.pathname === '/leader-board.html') {
         // Fetch course content from server
         fetchLeaderboardData();
     }
 
     // Check if the current page is the course content page
-    if (window.location.pathname === '/dashboard') {
+    if (window.location.pathname === '/dashboard.html') {
         //fetch Logged in user's full name
         fetchFullName();
     }
@@ -108,6 +112,124 @@ function fetchCourseContent() {
             console.error('Error fetching course content:', error);
         });
 }
+
+//start of my code script --------------------------------------------------------------------------------------------------------
+
+// Get all checkboxes with class 'course-checkbox'
+const checkboxes = document.querySelectorAll('.course-checkbox');
+
+// Function to handle checkbox change event
+function handleCheckboxChange(event) {
+    const course = event.target.value; // Get the value of the selected course
+    if (event.target.checked) {
+        // If checkbox is checked, add the course to user's preferences
+        addUserCoursePreference(course);
+    } else {
+        // If checkbox is unchecked, remove the course from user's preferences
+        removeUserCoursePreference(course);
+    }
+}
+
+// Add event listener to each checkbox
+checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', handleCheckboxChange);
+});
+
+// Function to add course to user's preferences
+function addUserCoursePreference(course) {
+    // Here, you would implement logic to add the course to user's preferences
+    // This could involve storing the course in local storage, sending it to a server, etc.
+    console.log(`Course '${course}' added to user's preferences.`);
+}
+
+// Function to remove course from user's preferences
+function removeUserCoursePreference(course) {
+    // Here, you would implement logic to remove the course from user's preferences
+    // This could involve removing the course from local storage, updating server data, etc.
+    console.log(`Course '${course}' removed from user's preferences.`);
+}
+
+
+
+// end of my code script  ------------------------------------------------------------------------------------
+
+
+
+
+// Function to add course to user's selections
+async function addUserCoursePreference(userId, courseId) {
+    try {
+        const response = await fetch('/api/user/courses/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ userId, courseId })
+        });
+        if (response.ok) {
+            console.log('Course added successfully');
+        } else {
+            console.error('Failed to add course');
+        }
+    } catch (error) {
+        console.error('Error adding course', error);
+    }
+}
+
+
+
+
+
+// Function to fetch selected courses for a specific user
+async function fetchUserCourses(userId) {
+    try {
+        const response = await fetch(`/api/user/${userId}/courses`);
+        if (response.ok) {
+            const data = await response.json();
+            const courses = data.courses;
+            const coursesList = document.getElementById('selected-courses-list');
+            courses.forEach(course => {
+                const listItem = document.createElement('li');
+                listItem.textContent = course;
+                coursesList.appendChild(listItem);
+            });
+        } else {
+            console.error('Failed to fetch user courses');
+        }
+    } catch (error) {
+        console.error('Error fetching user courses', error);
+    }
+}
+
+// Replace 'user123' with actual user ID
+const userId = 'user123';
+fetchUserCourses(userId);
+
+
+
+
+
+
+
+
+// Function to handle checkbox change event
+function handleCheckboxChange(event) {
+    const userId = 'user123'; // Replace with actual user ID
+    const courseId = event.target.value;
+    if (event.target.checked) {
+        addUserCoursePreference(userId, courseId);
+    } else {
+        // Implement functionality to remove course
+    }
+}
+
+// Add event listener to each checkbox
+checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', handleCheckboxChange);
+});
+
+/// end of script -------------------------------------------------------------------------------------
+
 
 function displayCourseContent(courseContent) {
     // Get the course name element
@@ -199,9 +321,24 @@ function fetchFullName() {
         });
 }
 
-function displayFullName(fullName) {
+//function displayFullName(fullName) {
     // Get the element where the full name will be displayed
-    const fullNameElement = document.getElementById('user-fullname');
+    //const fullNameElement = document.getElementById("user-fullname");
     // Set the inner HTML of the element to the user's full name
-    fullNameElement.textContent = fullName;
-}
+    //fullNameElement.textContent = fullName;
+//}
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Get the user's full name from the injected variable
+    const fullName = '<%= fullName %>';
+
+    const userFullNameSpan = document.getElementById("user-fullname");
+    userFullNameSpan.textContent = fullName;
+
+    const logoutBtn = document.getElementById("logout-btn");
+    logoutBtn.addEventListener("click", function() {
+        // Perform logout actions here
+        window.location.href = "/logout";
+    });
+});
